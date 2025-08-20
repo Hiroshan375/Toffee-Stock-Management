@@ -1,0 +1,7 @@
+# Allow image files to be displayed
+<FilesMatch "\.(jpg|jpeg|png|gif)$">
+    Header set Content-Type image/jpeg
+</FilesMatch>
+
+# Prevent directory listing
+Options -Indexes
