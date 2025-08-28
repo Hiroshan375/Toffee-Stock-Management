@@ -29,10 +29,11 @@ if (!$toffee) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? '';
-    $quantity = $_POST['quantity'] ?? 0;
     $price = $_POST['price'] ?? 0;
+    // Always use the original quantity from the database, ignoring any submitted quantity
+    $quantity = $toffee['quantity'];
     
-    if (empty($name) || empty($quantity) || empty($price)) {
+    if (empty($name) || empty($price)) {
         $error = 'Please fill all required fields';
     } else {
         // Handle file upload
@@ -88,6 +89,18 @@ $conn->close();
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="navbar">
+        <div class="navbar-container">
+            <a href="index.php" class="navbar-brand">Toffee Stock Management</a>
+            <div class="navbar-nav">
+                <a href="add.php" class="nav-link">Add Item</a>
+                <a href="issue_load.php" class="nav-link">Daily Issue/Load</a>
+                <a href="transactions.php" class="nav-link">Transactions</a>
+                <a href="summary.php" class="nav-link">Summary</a>
+            </div>
+        </div>
+    </div>
+    
     <div class="container">
         <h1>Edit Toffee</h1>
         
@@ -107,8 +120,8 @@ $conn->close();
             
             <div class="form-group">
                 <label for="quantity">Current Quantity *</label>
-                <input type="number" id="quantity" name="quantity" value="<?php echo $toffee['quantity']; ?>" min="0" required>
-                
+                <input type="number" id="quantity" name="quantity" value="<?php echo $toffee['quantity']; ?>" min="0" required readonly>
+                <p style="font-size: 12px; color: #666; margin-top: 5px;">Note: Quantity can only be updated through Daily Issue/Load transactions</p>
             </div>
             
             <div class="form-group">

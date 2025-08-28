@@ -16,10 +16,22 @@ $grandTotal = 0;
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+    <div class="navbar">
+        <div class="navbar-container">
+            <a href="index.php" class="navbar-brand">Toffee Stock Management</a>
+            <div class="navbar-nav">
+                <a href="add.php" class="nav-link">Add Item</a>
+                <a href="issue_load.php" class="nav-link">Daily Issue/Load</a>
+                <a href="transactions.php" class="nav-link">Transactions</a>
+                <a href="summary.php" class="nav-link">Summary</a>
+            </div>
+        </div>
+    </div>
+    
     <div class="container">
         <h1>Toffee Summary</h1>
         <?php if ($summaryResult && $summaryResult->num_rows > 0): ?>
-        <table border="1" cellpadding="10" cellspacing="0" style="width:100%; border-collapse: collapse;">
+        <table class="transactions-table">
             <thead>
                 <tr>
                     <th>Name</th>
@@ -48,9 +60,9 @@ $grandTotal = 0;
         </table>
         <button id="download-summary-btn" class="btn" style="margin-top: 10px;">Download Summary</button>
         <?php else: ?>
-        <p>No toffees available for summary.</p>
+        <p style="color: #333;">No toffees available for summary.</p>
         <?php endif; ?>
-        <button onclick="window.location.href='index.php'" class="btn btn-back" style="margin-top: 20px;">Back to Home</button>
+        <!-- Removed Back to Home button -->
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>

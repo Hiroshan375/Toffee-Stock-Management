@@ -70,25 +70,11 @@ $result = $conn->query($query);
     <link rel="stylesheet" href="style.css">
     <style>
         .issue-load-form {
-            background: #f9f9f9;
+            background: rgba(255, 255, 255, 0.5);
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 15px;
             margin: 20px 0;
-        }
-        .transaction-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        .transaction-table th,
-        .transaction-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        .transaction-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
+            backdrop-filter: blur(5px);
         }
         .quantity-input {
             width: 80px;
@@ -131,13 +117,20 @@ $result = $conn->query($query);
     </style>
 </head>
 <body>
+   <div class="navbar">
+        <div class="navbar-container">
+            <a href="index.php" class="navbar-brand">Toffee Stock Management</a>
+            <div class="navbar-nav">
+                <a href="add.php" class="nav-link">Add Item</a>
+                <a href="issue_load.php" class="nav-link">Daily Issue/Load</a>
+                <a href="transactions.php" class="nav-link">Transactions</a>
+                <a href="summary.php" class="nav-link">Summary</a>
+            </div>
+        </div>
+    </div>
+    
     <div class="container">
         <h1>Daily Toffee Issue & Load Entry</h1>
-        
-        <div class="navigation">
-            <a href="index.php" class="btn">← Back to Stock</a>
-            <a href="transactions.php" class="btn">View Transactions</a>
-        </div>
 
         <?php if ($message): ?>
             <div class="message success"><?php echo htmlspecialchars($message); ?></div>
@@ -150,7 +143,7 @@ $result = $conn->query($query);
         <form method="POST" class="issue-load-form">
             <h2>Enter Daily Transactions - <?php echo date('d/m/Y'); ?></h2>
             
-            <table class="transaction-table">
+            <table class="transactions-table">
                 <thead>
                     <tr>
                         <th>Image</th>

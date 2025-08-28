@@ -70,8 +70,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <div class="navbar">
+        <div class="navbar-container">
+            <a href="index.php" class="navbar-brand">Toffee Stock Management</a>
+            <div class="navbar-nav">
+                <a href="add.php" class="nav-link">Add Item</a>
+                <a href="issue_load.php" class="nav-link">Daily Issue/Load</a>
+                <a href="transactions.php" class="nav-link">Transactions</a>
+                <a href="summary.php" class="nav-link">Summary</a>
+            </div>
+        </div>
+    </div>
+    
     <div class="container">
-        <h1>Add New Toffee</h1>
+        <h1 class="text-center">Add New Toffee</h1>
         
         <?php if ($message): ?>
             <div class="message success"><?php echo $message; ?></div>

@@ -60,10 +60,11 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
     <link rel="stylesheet" href="style.css">
     <style>
         .filter-section {
-            background: #f9f9f9;
+            background: rgba(255, 255, 255, 0.5);
             padding: 20px;
-            border-radius: 8px;
+            border-radius: 15px;
             margin: 20px 0;
+            backdrop-filter: blur(5px);
         }
         .filter-form {
             display: flex;
@@ -78,27 +79,13 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
         }
         .filter-group label {
             font-weight: bold;
+            color: #333;
         }
         .filter-group select,
         .filter-group input {
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
-        }
-        .transactions-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-        }
-        .transactions-table th,
-        .transactions-table td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        .transactions-table th {
-            background-color: #f2f2f2;
-            font-weight: bold;
         }
         .issue-qty {
             color: #d9534f;
@@ -115,16 +102,37 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
             margin: 20px 0;
         }
         .stat-card {
-            background: white;
+            background: rgba(255, 255, 255, 0.9);
             padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 15px;
             text-align: center;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
         }
         .stat-value {
             font-size: 24px;
             font-weight: bold;
             color: #333;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         .stat-label {
             color: #666;
@@ -133,13 +141,19 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Transaction History</h1>
-        
-        <div class="navigation">
-            <a href="index.php" class="btn">← Back to Stock</a>
-            <a href="issue_load.php" class="btn">Enter New Transactions</a>
+    <div class="navbar">
+        <div class="navbar-container">
+            <a href="index.php" class="navbar-brand">Toffee Stock Management</a>
+            <div class="navbar-nav">
+                <a href="add.php" class="nav-link">Add Item</a>
+                <a href="issue_load.php" class="nav-link">Daily Issue/Load</a>
+                <a href="transactions.php" class="nav-link">Transactions</a>
+                <a href="summary.php" class="nav-link">Summary</a>
+            </div>
         </div>
+    </div>
+    
+    <div class="container">
 
         <div class="filter-section">
             <h2>Filter Transactions</h2>
@@ -165,8 +179,8 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
                     </select>
                 </div>
                 
-                <button type="submit" class="btn">Apply Filters</button>
-                <a href="transactions.php" class="btn">Clear Filters</a>
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                <a href="transactions.php" class="btn btn-warning">Clear Filters</a>
             </form>
         </div>
 
@@ -254,10 +268,62 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
                     <?php endwhile; ?>
                 </tbody>
             </table>
+            <button id="download-transactions-btn" class="btn" style="margin-top: 20px;">Download Transactions</button>
         <?php else: ?>
             <p>No transactions found.</p>
         <?php endif; ?>
     </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        const { jsPDF } = window.jspdf;
+
+        document.getElementById('download-transactions-btn').addEventListener('click', function() {
+            const doc = new jsPDF();
+            doc.text("Transaction History", 14, 16);
+
+            const table = document.querySelector('table');
+            const rows = [];
+            const headers = [];
+
+            // Get headers
+            const headerCells = table.querySelectorAll('thead th');
+            headerCells.forEach(cell => headers.push(cell.innerText));
+
+            // Get data rows
+            const dataRows = table.querySelectorAll('tbody tr');
+            dataRows.forEach(row => {
+                const rowData = [];
+                const cells = row.querySelectorAll('td');
+                cells.forEach(cell => rowData.push(cell.innerText));
+                rows.push(rowData);
+            });
+
+            doc.autoTable({
+                head: [headers],
+                body: rows,
+                startY: 25,
+                theme: 'grid',
+                styles: {
+                    fontSize: 8,
+                    cellPadding: 2,
+                    overflow: 'linebreak',
+                    halign: 'left'
+                },
+                headStyles: {
+                    fillColor: [200, 200, 200],
+                    textColor: [0, 0, 0],
+                    fontStyle: 'bold'
+                },
+                alternateRowStyles: {
+                    fillColor: [240, 240, 240]
+                }
+            });
+
+            doc.save('transaction_history.pdf');
+        });
+    </script>
 </body>
 </html>
 <?php $conn->close(); ?>
