@@ -77,7 +77,7 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
             border-radius: 15px;
             margin: 20px 0;
             backdrop-filter: blur(5px);
-            
+            color: #fff;
         }
         .filter-form {
             display: flex;
@@ -92,7 +92,7 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
         }
         .filter-group label {
             font-weight: bold;
-            color: #333;
+            color: #fff;
         }
         .filter-group select,
         .filter-group input {
@@ -177,56 +177,54 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
                     <button type="button" class="btn <?php echo $filter_type === 'monthly' ? 'btn-primary' : 'btn-secondary'; ?>" onclick="setFilterType('monthly')">Monthly</button>
                     <button type="button" class="btn <?php echo $filter_type === 'annually' ? 'btn-primary' : 'btn-secondary'; ?>" onclick="setFilterType('annually')">Annually</button>
                 </div>
-            </form>
-        </div>
-        <div class="filter-section">
-            <form method="GET" class="filter-form">
-                <input type="hidden" name="filter_type" id="filter_type" value="<?php echo htmlspecialchars($filter_type); ?>">
-                <div class="filter-group" id="daily-filter" style="display: <?php echo $filter_type === 'daily' ? 'flex' : 'none'; ?>;">
-                    <label for="date">Date:</label>
-                    <input type="date" 
-                           id="date" 
-                           name="date" 
-                           value="<?php echo htmlspecialchars($filter_date); ?>">
-                </div>
                 
-                <div class="filter-group" id="monthly-filter" style="display: <?php echo $filter_type === 'monthly' ? 'flex' : 'none'; ?>;">
-                    <label for="month">Month:</label>
-                    <input type="month" 
-                           id="month" 
-                           name="month" 
-                           value="<?php echo htmlspecialchars($filter_month); ?>">
+                <div style="display: flex; gap: 15px; align-items: end; flex-wrap: wrap;">
+                    <div class="filter-group" id="daily-filter" style="display: <?php echo $filter_type === 'daily' ? 'flex' : 'none'; ?>;">
+                        <label for="date">Date:</label>
+                        <input type="date" 
+                               id="date" 
+                               name="date" 
+                               value="<?php echo htmlspecialchars($filter_date); ?>">
+                    </div>
+                    
+                    <div class="filter-group" id="monthly-filter" style="display: <?php echo $filter_type === 'monthly' ? 'flex' : 'none'; ?>;">
+                        <label for="month">Month:</label>
+                        <input type="month" 
+                               id="month" 
+                               name="month" 
+                               value="<?php echo htmlspecialchars($filter_month); ?>">
+                    </div>
+                    
+                    <div class="filter-group" id="annual-filter" style="display: <?php echo $filter_type === 'annually' ? 'flex' : 'none'; ?>;">
+                        <label for="year">Year:</label>
+                        <input type="number" 
+                               id="year" 
+                               name="year" 
+                               min="2000" 
+                               max="2030" 
+                               value="<?php echo htmlspecialchars($filter_year); ?>"
+                               style="width: 100px;">
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="toffee">Toffee:</label>
+                        <select id="toffee" name="toffee">
+                            <option value="">All Toffees</option>
+                            <?php 
+                            // Reset toffees_result pointer and fetch again
+                            $toffees_result->data_seek(0);
+                            while ($toffee = $toffees_result->fetch_assoc()): ?>
+                                <option value="<?php echo $toffee['id']; ?>" 
+                                        <?php echo $filter_toffee == $toffee['id'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($toffee['name']); ?>
+                                </option>
+                            <?php endwhile; ?>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Apply Filters</button>
+                    <a href="transactions.php" class="btn btn-warning">Clear Filters</a>
                 </div>
-                
-                <div class="filter-group" id="annual-filter" style="display: <?php echo $filter_type === 'annually' ? 'flex' : 'none'; ?>;">
-                    <label for="year">Year:</label>
-                    <input type="number" 
-                           id="year" 
-                           name="year" 
-                           min="2000" 
-                           max="2030" 
-                           value="<?php echo htmlspecialchars($filter_year); ?>"
-                           style="width: 100px;">
-                </div>
-                
-                <div class="filter-group">
-                    <label for="toffee">Toffee:</label>
-                    <select id="toffee" name="toffee">
-                        <option value="">All Toffees</option>
-                        <?php 
-                        // Reset toffees_result pointer and fetch again
-                        $toffees_result->data_seek(0);
-                        while ($toffee = $toffees_result->fetch_assoc()): ?>
-                            <option value="<?php echo $toffee['id']; ?>" 
-                                    <?php echo $filter_toffee == $toffee['id'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($toffee['name']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                
-                <button type="submit" class="btn btn-primary">Apply Filters</button>
-                <a href="transactions.php" class="btn btn-warning">Clear Filters</a>
             </form>
         </div>
 
@@ -359,11 +357,13 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
             
             // Update button styles
             document.querySelectorAll('button[onclick^="setFilterType"]').forEach(btn => {
-                btn.className = btn.className.replace('btn-primary', 'btn-secondary');
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
             });
             
             const activeBtn = document.querySelector(`button[onclick="setFilterType('${type}')"]`);
-            activeBtn.className = activeBtn.className.replace('btn-secondary', 'btn-primary');
+            activeBtn.classList.remove('btn-secondary');
+            activeBtn.classList.add('btn-primary');
         }
 
         // Hide download button initially if no filters are applied (showing current date by default)
