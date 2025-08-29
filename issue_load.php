@@ -70,7 +70,7 @@ $result = $conn->query($query);
     <link rel="stylesheet" href="style.css">
     <style>
         .issue-load-form {
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(27, 30, 43, 0.95);
             padding: 20px;
             border-radius: 15px;
             margin: 20px 0;

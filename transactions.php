@@ -5,7 +5,10 @@ require_once 'functions.php';
 $conn = getConnection();
 
 // Get filter parameters
-$filter_date = isset($_GET['date']) ? $_GET['date'] : '';
+$filter_type = isset($_GET['filter_type']) ? $_GET['filter_type'] : 'daily';
+$filter_date = isset($_GET['date']) ? $_GET['date'] : date('Y-m-d');
+$filter_month = isset($_GET['month']) ? $_GET['month'] : date('Y-m');
+$filter_year = isset($_GET['year']) ? $_GET['year'] : date('Y');
 $filter_toffee = isset($_GET['toffee']) ? $_GET['toffee'] : '';
 
 // Build query
@@ -26,9 +29,18 @@ WHERE 1=1";
 $params = [];
 $types = "";
 
-if ($filter_date) {
+// Apply date filters based on filter type
+if ($filter_type === 'daily' && $filter_date) {
     $query .= " AND t.transaction_date = ?";
     $params[] = $filter_date;
+    $types .= "s";
+} elseif ($filter_type === 'monthly' && $filter_month) {
+    $query .= " AND DATE_FORMAT(t.transaction_date, '%Y-%m') = ?";
+    $params[] = $filter_month;
+    $types .= "s";
+} elseif ($filter_type === 'annually' && $filter_year) {
+    $query .= " AND YEAR(t.transaction_date) = ?";
+    $params[] = $filter_year;
     $types .= "s";
 }
 
@@ -60,11 +72,12 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
     <link rel="stylesheet" href="style.css">
     <style>
         .filter-section {
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(27, 30, 43, 0.95);
             padding: 20px;
             border-radius: 15px;
             margin: 20px 0;
             backdrop-filter: blur(5px);
+            
         }
         .filter-form {
             display: flex;
@@ -156,9 +169,20 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
     <div class="container">
 
         <div class="filter-section">
-            <h2>Filter Transactions</h2>
             <form method="GET" class="filter-form">
-                <div class="filter-group">
+                <input type="hidden" name="filter_type" id="filter_type" value="<?php echo htmlspecialchars($filter_type); ?>">
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <button type="button" class="btn <?php echo $filter_type === 'daily' ? 'btn-primary' : 'btn-secondary'; ?>" onclick="setFilterType('daily')">Daily</button>
+                    <button type="button" class="btn <?php echo $filter_type === 'monthly' ? 'btn-primary' : 'btn-secondary'; ?>" onclick="setFilterType('monthly')">Monthly</button>
+                    <button type="button" class="btn <?php echo $filter_type === 'annually' ? 'btn-primary' : 'btn-secondary'; ?>" onclick="setFilterType('annually')">Annually</button>
+                </div>
+            </form>
+        </div>
+        <div class="filter-section">
+            <form method="GET" class="filter-form">
+                <input type="hidden" name="filter_type" id="filter_type" value="<?php echo htmlspecialchars($filter_type); ?>">
+                <div class="filter-group" id="daily-filter" style="display: <?php echo $filter_type === 'daily' ? 'flex' : 'none'; ?>;">
                     <label for="date">Date:</label>
                     <input type="date" 
                            id="date" 
@@ -166,11 +190,33 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
                            value="<?php echo htmlspecialchars($filter_date); ?>">
                 </div>
                 
+                <div class="filter-group" id="monthly-filter" style="display: <?php echo $filter_type === 'monthly' ? 'flex' : 'none'; ?>;">
+                    <label for="month">Month:</label>
+                    <input type="month" 
+                           id="month" 
+                           name="month" 
+                           value="<?php echo htmlspecialchars($filter_month); ?>">
+                </div>
+                
+                <div class="filter-group" id="annual-filter" style="display: <?php echo $filter_type === 'annually' ? 'flex' : 'none'; ?>;">
+                    <label for="year">Year:</label>
+                    <input type="number" 
+                           id="year" 
+                           name="year" 
+                           min="2000" 
+                           max="2030" 
+                           value="<?php echo htmlspecialchars($filter_year); ?>"
+                           style="width: 100px;">
+                </div>
+                
                 <div class="filter-group">
                     <label for="toffee">Toffee:</label>
                     <select id="toffee" name="toffee">
                         <option value="">All Toffees</option>
-                        <?php while ($toffee = $toffees_result->fetch_assoc()): ?>
+                        <?php 
+                        // Reset toffees_result pointer and fetch again
+                        $toffees_result->data_seek(0);
+                        while ($toffee = $toffees_result->fetch_assoc()): ?>
                             <option value="<?php echo $toffee['id']; ?>" 
                                     <?php echo $filter_toffee == $toffee['id'] ? 'selected' : ''; ?>>
                                 <?php echo htmlspecialchars($toffee['name']); ?>
@@ -197,9 +243,18 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
         $summary_params = [];
         $summary_types = "";
         
-        if ($filter_date) {
+        // Apply date filters based on filter type for summary
+        if ($filter_type === 'daily' && $filter_date) {
             $summary_query .= " AND t.transaction_date = ?";
             $summary_params[] = $filter_date;
+            $summary_types .= "s";
+        } elseif ($filter_type === 'monthly' && $filter_month) {
+            $summary_query .= " AND DATE_FORMAT(t.transaction_date, '%Y-%m') = ?";
+            $summary_params[] = $filter_month;
+            $summary_types .= "s";
+        } elseif ($filter_type === 'annually' && $filter_year) {
+            $summary_query .= " AND YEAR(t.transaction_date) = ?";
+            $summary_params[] = $filter_year;
             $summary_types .= "s";
         }
         
@@ -268,7 +323,12 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
                     <?php endwhile; ?>
                 </tbody>
             </table>
-            <button id="download-transactions-btn" class="btn" style="margin-top: 20px;">Download Transactions</button>
+            <?php 
+            // Show download button only if filters are applied (check if any filter parameter is present in URL)
+            $hasFilters = isset($_GET['date']) || isset($_GET['month']) || isset($_GET['year']) || isset($_GET['toffee']);
+            if ($hasFilters): ?>
+                <button id="download-transactions-btn" class="btn" style="margin-top: 20px;">Download Transactions</button>
+            <?php endif; ?>
         <?php else: ?>
             <p>No transactions found.</p>
         <?php endif; ?>
@@ -278,6 +338,44 @@ $toffees_result = $conn->query("SELECT id, name FROM toffees ORDER BY name ASC")
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <script>
         const { jsPDF } = window.jspdf;
+
+        // Function to set filter type and show/hide appropriate inputs
+        function setFilterType(type) {
+            document.getElementById('filter_type').value = type;
+            
+            // Hide all filter inputs
+            document.getElementById('daily-filter').style.display = 'none';
+            document.getElementById('monthly-filter').style.display = 'none';
+            document.getElementById('annual-filter').style.display = 'none';
+            
+            // Show the selected filter input
+            if (type === 'daily') {
+                document.getElementById('daily-filter').style.display = 'flex';
+            } else if (type === 'monthly') {
+                document.getElementById('monthly-filter').style.display = 'flex';
+            } else if (type === 'annually') {
+                document.getElementById('annual-filter').style.display = 'flex';
+            }
+            
+            // Update button styles
+            document.querySelectorAll('button[onclick^="setFilterType"]').forEach(btn => {
+                btn.className = btn.className.replace('btn-primary', 'btn-secondary');
+            });
+            
+            const activeBtn = document.querySelector(`button[onclick="setFilterType('${type}')"]`);
+            activeBtn.className = activeBtn.className.replace('btn-secondary', 'btn-primary');
+        }
+
+        // Hide download button initially if no filters are applied (showing current date by default)
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasFilters = urlParams.has('date') || urlParams.has('month') || urlParams.has('year') || urlParams.has('toffee');
+            
+            const downloadBtn = document.getElementById('download-transactions-btn');
+            if (downloadBtn) {
+                downloadBtn.style.display = hasFilters ? 'block' : 'none';
+            }
+        });
 
         document.getElementById('download-transactions-btn').addEventListener('click', function() {
             const doc = new jsPDF();
